@@ -1,5 +1,11 @@
 <?
-
+/**
+ * Clase RestServer
+ * 
+ * Esta clase se donde se encuentra todo lo relacioando a la API Rest 
+ * @author Aquiles Pulido
+ * 
+ */
 class RESTServer extends WP_REST_Controller {
  
     //The namespace and version for the REST SERVER
@@ -125,14 +131,37 @@ class RESTServer extends WP_REST_Controller {
         $error->add(400, __("El campo del nombre de usuario es requerido", 'wp-rest-user'), array('status' => 400));
         return $error;
       }
-      if (empty($email)) {
-        $error->add(400, __("Email field 'email' is required.", 'wp-rest-user'), array('status' => 400));
+
+      if (empty($email) || empty($email_usuario)) {
+        $error->add(400, __("El campo de email es requerido", 'wp-rest-user'), array('status' => 400));
         return $error;
       }
+
       if (empty($password)) {
-        $error->add(400, __("Password field 'password' is required.", 'wp-rest-user'), array('status' => 400));
+        $error->add(400, __("El campo de contraseña es requerido", 'wp-rest-user'), array('status' => 400));
         return $error;
       }
+
+      if (empty($nombre)) {
+        $error->add(400, __("El campo de nombre es requerido", 'wp-rest-user'), array('status' => 400));
+        return $error;
+      }
+
+      if (empty($apellido)) {
+        $error->add(400, __("El campo de apellido es requerido", 'wp-rest-user'), array('status' => 400));
+        return $error;
+      }
+
+      if (empty($compania_universidad)) {
+        $error->add(400, __("El campo de Compania/Universidad es requerido", 'wp-rest-user'), array('status' => 400));
+        return $error;
+      }
+
+      if (empty($profesion)) {
+        $error->add(400, __("El campo de profesion es requerido", 'wp-rest-user'), array('status' => 400));
+        return $error;
+      }
+      
       // if (empty($role)) {
       //  $role = 'subscriber';
       // } else {
@@ -144,6 +173,9 @@ class RESTServer extends WP_REST_Controller {
       //     }
       // }
       $user_id = username_exists($username);
+      if($user_id){
+        $error->add(400, __("El usuario ya existe, por favor intente intente con otro", 'wp-rest-user'), array('status' => 400));
+      }
   
       if (!$user_id && email_exists($email) == false) {
         $user_id = wp_create_user($username, $password, $email);
@@ -162,14 +194,15 @@ class RESTServer extends WP_REST_Controller {
         'profesion'=> $profesion,
         'pais'=> $pais,
         'email_usuario'=> $email_usuario
-      );
+        );
   
       if (!is_wp_error($user_id)) {
         // Ger User Meta Data (Sensitive, Password included. DO NOT pass to front end.)
         $user = get_user_by('id', $user_id);
+
         foreach( $meta as $key => $val ) {
-        update_user_meta( $user_id, $key, $val ); 
-      }
+          update_user_meta( $user_id, $key, $val ); 
+        }
   
           // $user->set_role($role);
         $user->set_role('estudiante');
@@ -179,7 +212,7 @@ class RESTServer extends WP_REST_Controller {
         }
         // Ger User Data (Non-Sensitive, Pass to front end.)
         $response['code'] = 200;
-        $response['message'] = __("User '" . $username . "' Registration was Successful", "wp-rest-user");
+        $response['message'] = __("El usuario '" . $username . "' Registro completo", "wp-rest-user");
   
       } else {
   
@@ -189,12 +222,13 @@ class RESTServer extends WP_REST_Controller {
   
     } else {
   
-      $error->add(406, __("Email already exists, please try 'Reset Password'", 'wp-rest-user'), array('status' => 400));
+      $error->add(401, __("El email ya existe, por favor intente presionando 'Olvide contraseña'", 'wp-rest-user'), array('status' => 400));
       return $error;
   
     }
   
     return new WP_REST_Response($response, 123);
+    
   }
   
     
