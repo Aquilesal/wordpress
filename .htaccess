@@ -1,17 +1,14 @@
 # BEGIN WordPress
-# Las directivas (líneas) entre `BEGIN WordPress` y `END WordPress` se generan dinámicamente
-# , y solo se deberían modificar mediante filtros de WordPress.
-# Cualquier cambio en las directivas que hay entre esos marcadores se sobreescribirán.
+# The directives (lines) between `BEGIN WordPress` and `END WordPress` are
+# dynamically generated, and should only be modified via WordPress filters.
+# Any changes to the directives between these markers will be overwritten.
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /
 RewriteRule ^index\.php$ - [L]
-RewriteCond %{HTTP:Authorization} ^(.*)
-RewriteRule ^(.*) - [E=HTTP_AUTHORIZATION:%1]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.php [L]
-SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
 </IfModule>
 
 # END WordPress
