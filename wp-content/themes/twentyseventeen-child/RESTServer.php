@@ -17,17 +17,20 @@ class RESTServer extends WP_REST_Controller {
       $base      = 'user-inscribed';
       register_rest_route( $namespace, '/' . $base, array(
         array(
-            'methods'         => WP_REST_Server::READABLE,
-            'callback'        => array( $this, 'get_user_inscribed_by_username' ),
-            'permission_callback'   => array( $this, 'get_permission' )
-          ),
-        array(
             'methods'         => WP_REST_Server::CREATABLE,
             'callback'        => array( $this, 'add_user_inscribed' ),
             'permission_callback'   => array( $this, 'add_permission' )
           )
       )  );
-  
+
+      register_rest_route( $namespace, 'users/courses/user_inscribed_by_username', array(
+        array(
+            'methods'         => WP_REST_Server::CREATABLE,
+            'callback'        => array( $this, 'get_user_inscribed_by_username' ),
+            'permission_callback'   => array( $this, 'get_permission' )
+          )
+      )  );
+
        register_rest_route( $namespace, '/user-evaluation', array(
             'methods'         => WP_REST_Server::CREATABLE,
             'callback'        => array( $this, 'get_evaluation_by_user' ),
@@ -85,7 +88,8 @@ class RESTServer extends WP_REST_Controller {
       global $wpdb;
       $username=$request->get_param( 'username' );
       $query = "SELECT * FROM `user_inscribed` WHERE usuario='$username'";
-      $list = $wpdb->get_results($query);
+      
+      $list = $wpdb->get_results( $query);
       return $list;
     }
   
@@ -255,14 +259,12 @@ class RESTServer extends WP_REST_Controller {
   
       global $wpdb;
   
-      
       $user=$request->get_param( 'username' );
       $course=$request->get_param( 'courseID' );
   
       $query = "INSERT INTO user_inscribed (usuario, id_curso) VALUES ('$user', '$course')"  ;
-      $list = $wpdb->get_results($query);
+      $list = $wpdb->get_results($query, OBJECT);
       return $list;
-     
       
     }
   }
