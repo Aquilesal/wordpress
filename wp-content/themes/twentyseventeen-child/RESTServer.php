@@ -41,6 +41,18 @@ class RESTServer extends WP_REST_Controller {
             'methods'         => WP_REST_Server::CREATABLE,
             'callback'        => array( $this, 'wc_rest_user_endpoint_handler' )
           ) );
+
+        register_rest_route( $namespace, '/user/addLastLesson', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'add_user_lastLesson' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+
+         register_rest_route( $namespace, '/user/getLastLesson', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'get_user_lastLesson' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
     }
   
     public function inscribed_by_course() {
@@ -267,4 +279,33 @@ class RESTServer extends WP_REST_Controller {
       return $list;
       
     }
+
+    public function add_user_lastLesson( WP_REST_Request $request ){
+
+      global $wpdb;
+
+      $user=$request->get_param( 'username' );
+      $lesson=$request->get_param( 'lessonID' );
+  
+      $query = "UPDATE user_inscribed SET lastLesson='$lesson' WHERE usuario='$user'" ;
+      $list = $wpdb->get_results($query);
+      return $list;
+     
+      
+    }
+  
+     public function get_user_lastLesson( WP_REST_Request $request ){
+  
+      global $wpdb;
+  
+      $user=$request->get_param( 'username' );
+   
+      $idLesson=$request->get_param( 'id_lesson' );
+      $idEvaluation=$request->get_param( 'id_evaluation' );
+      $query = "SELECT * FROM `user_inscribed` WHERE usuario='$user'";
+      $list = $wpdb->get_results($query);
+      return $list;
+     
+    }
+    
   }
