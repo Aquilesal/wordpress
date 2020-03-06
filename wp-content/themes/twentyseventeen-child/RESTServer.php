@@ -53,6 +53,19 @@ class RESTServer extends WP_REST_Controller {
           'callback'        => array( $this, 'get_user_lastLesson' ),
           'permission_callback'   => array( $this, 'get_permission' )
         ) );
+
+        register_rest_route( $namespace, '/user/addLesson', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'add_user_Lesson' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+
+          register_rest_route( $namespace, '/user/getAllLessons', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'get_user_allLesson' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+
     }
   
     public function inscribed_by_course() {
@@ -69,8 +82,11 @@ class RESTServer extends WP_REST_Controller {
    
     // Register our REST Server
     public function hook_rest_server(){
+      
       add_action( 'rest_api_init', array( $this, 'register_routes' ) );
       add_action( 'rest_api_init', array( $this, 'inscribed_by_course' ) );
+      add_action( 'rest_api_init', array( $this, 'forum' ) );
+
     }
    
     public function get_permission(){
@@ -82,6 +98,122 @@ class RESTServer extends WP_REST_Controller {
         return true;
     }
    
+    public function forum() {
+      $namespace = $this->my_namespace . $this->my_version;
+      $base      = 'forum';
+       register_rest_route( $namespace, '/' . $base.'/getTopics', array(
+            'methods'         => WP_REST_Server::CREATABLE,
+            'callback'        => array( $this, 'get_forum_topic' ),
+            'permission_callback'   => array( $this, 'get_permission' )
+          ) );
+  
+            register_rest_route( $namespace, '/' . $base.'/createTopic', array(
+            'methods'         => WP_REST_Server::CREATABLE,
+            'callback'        => array( $this, 'add_forum_topic' ),
+            'permission_callback'   => array( $this, 'get_permission' )
+          ) );
+  
+          register_rest_route( $namespace, '/' . $base.'/topic/getAnswers', array(
+            'methods'         => WP_REST_Server::CREATABLE,
+            'callback'        => array( $this, 'get_topic_answers' ),
+            'permission_callback'   => array( $this, 'get_permission' )
+          ) );
+            register_rest_route( $namespace, '/' . $base.'/topic/createAnswer', array(
+            'methods'         => WP_REST_Server::CREATABLE,
+            'callback'        => array( $this, 'add_topic_answer' ),
+            'permission_callback'   => array( $this, 'get_permission' )
+          ) );
+
+    }
+
+    public function get_forum_topic( WP_REST_Request $request ){
+
+      global $wpdb;
+  
+      $idCourse=$request->get_param( 'id_course' );
+      $idForum=$request->get_param( 'id_forum' );
+  
+      $query = "SELECT * FROM topic_forum WHERE id_course='$idCourse' and id_forum='$idForum'";
+      $list = $wpdb->get_results($query);
+      return $list;
+     
+      
+    }
+  
+    public function add_forum_topic( WP_REST_Request $request ){
+
+
+      global $wpdb;
+  
+      $userCreator=$request->get_param( 'username' );
+      $idCourse=$request->get_param( 'id_course' );
+      $idForum=$request->get_param( 'id_forum' );
+      $title=$request->get_param( 'title' );
+  
+      $query = "INSERT INTO topic_forum (creator_user, id_course,id_forum,title) VALUES ('$userCreator', '$idCourse','$idForum','$title')";
+      $list = $wpdb->get_results($query);
+      return $list;
+     
+    }  
+  
+    public function get_topic_answers( WP_REST_Request $request ){
+  
+      global $wpdb;
+  
+      $idTopic=$request->get_param( 'id_topic' );
+  
+      $query = "SELECT * FROM answer_topic WHERE id_topic='$idTopic'";
+      $list = $wpdb->get_results($query);
+      return $list;
+     
+      
+    }
+  
+    public function add_topic_answer( WP_REST_Request $request ){
+  
+  
+      global $wpdb;
+   
+      $userCreator=$request->get_param( 'username' );
+      $idTopic=$request->get_param( 'id_topic' );
+      $id_father=$request->get_param( 'id_father' );
+      $answer=$request->get_param( 'answer' );
+  
+      $query = "INSERT INTO answer_topic (creator_user, id_topic,id_father,answer) VALUES ('$userCreator', '$idTopic','$id_father','$answer')";
+      $list = $wpdb->get_results($query);
+      return $list;
+     
+      
+    }
+
+    public function get_user_allLesson( WP_REST_Request $request ){
+
+      global $wpdb;
+      
+      $user=$request->get_param( 'username' );
+      $id_course=$request->get_param( 'id_course' );
+  
+      $query = "SELECT * FROM lesson_user_view WHERE user='$user' AND id_course='$id_course'";
+      $list = $wpdb->get_results($query);
+      return $list;
+     
+    }
+  
+    public function add_user_Lesson( WP_REST_Request $request ){
+  
+  
+      global $wpdb;
+  
+      $user=$request->get_param( 'username' );
+      $id_course=$request->get_param( 'id_course' );
+      $id_lesson=$request->get_param( 'id_lesson' );
+  
+      $query = "INSERT INTO lesson_user_view (user, id_course,id_lesson) VALUES ('$user', '$id_course','$id_lesson')";
+      $list = $wpdb->get_results($query);
+      return $list;
+     
+    }
+
     public function get_user_inscribed_by_username( WP_REST_Request $request ){
       // //Let Us use the helper methods to get the parameters
       // $category = $request->get_param( 'category' );
