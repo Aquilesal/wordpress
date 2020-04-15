@@ -36,6 +36,12 @@ class RESTServer extends WP_REST_Controller {
             'callback'        => array( $this, 'get_evaluation_by_user' ),
             'permission_callback'   => array( $this, 'get_permission' )
           ) );
+
+       register_rest_route( $namespace, '/add-user-evaluation', array(
+            'methods'         => WP_REST_Server::CREATABLE,
+            'callback'        => array( $this, 'add_evaluation_by_user' ),
+            'permission_callback'   => array( $this, 'get_permission' )
+          ) );
   
        register_rest_route( $namespace, '/users/register', array(
             'methods'         => WP_REST_Server::CREATABLE,
@@ -255,6 +261,19 @@ class RESTServer extends WP_REST_Controller {
       $idLesson=$request->get_param( 'id_lesson' );
       $idEvaluation=$request->get_param( 'id_evaluation' );
       $query = "SELECT * FROM `user_evaluation` WHERE user='$user' and id_lesson='$idLesson' and id_evaluation='$idEvaluation'";
+      $list = $wpdb->get_results($query);
+      return $list;
+    }
+
+    public function add_evaluation_by_user( WP_REST_Request $request ){
+  
+      global $wpdb;
+      $user=$request->get_param( 'user' );
+      $idLesson=$request->get_param( 'id_lesson' );
+      $idEvaluation=$request->get_param( 'id_evaluation' );
+      $score=$request->get_param( 'score' );
+
+      $query = "INSERT INTO user_evaluation (user, id_lesson, id_evaluation, puntaje) VALUES ('$user', '$idLesson','$idEvaluation','$score')"  ;
       $list = $wpdb->get_results($query);
       return $list;
     }
