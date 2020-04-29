@@ -6,6 +6,10 @@
  * @author Aquiles Pulido
  * 
  */
+
+require_once 'stripe/init.php';
+use Stripe\Stripe;
+
 class RESTServer extends WP_REST_Controller {
  
     //The namespace and version for the REST SERVER
@@ -22,6 +26,8 @@ class RESTServer extends WP_REST_Controller {
             'permission_callback'   => array( $this, 'add_permission' )
           )
       )  );
+
+
 
       register_rest_route( $namespace, 'users/courses/user_inscribed_by_username', array(
         array(
@@ -42,6 +48,19 @@ class RESTServer extends WP_REST_Controller {
             'callback'        => array( $this, 'add_evaluation_by_user' ),
             'permission_callback'   => array( $this, 'get_permission' )
           ) );
+
+       register_rest_route( $namespace, '/update-user-evaluation', array(
+            'methods'         => WP_REST_Server::CREATABLE,
+            'callback'        => array( $this, 'update_evaluation_by_user' ),
+            'permission_callback'   => array( $this, 'get_permission' )
+          ) );
+
+       register_rest_route( $namespace, '/get_user_first_evaluation', array(
+            'methods'         => WP_REST_Server::CREATABLE,
+            'callback'        => array( $this, 'get_first_evaluation_by_user' ),
+            'permission_callback'   => array( $this, 'get_permission' )
+          ) );
+  
   
        register_rest_route( $namespace, '/users/register', array(
             'methods'         => WP_REST_Server::CREATABLE,
@@ -85,6 +104,50 @@ class RESTServer extends WP_REST_Controller {
           )
       )  );
     }
+
+    public function badges() {
+    $namespace = $this->my_namespace . $this->my_version;
+    $base      = 'badges';
+     register_rest_route( $namespace, '/' . $base.'/getByUser', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'get_user_badges' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+
+          register_rest_route( $namespace, '/' . $base.'/addUserBadges', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'add_user_badges' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+  }
+
+  public function stripe() {
+    $namespace = $this->my_namespace . $this->my_version;
+    $base      = 'stripe';
+
+          register_rest_route( $namespace, '/' . $base.'/addCharge', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'add_stripe_charge' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+
+          register_rest_route( $namespace, '/' . $base.'/registerPayment', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'register_payment_stripe' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+  }
+
+   public function paypal() {
+    $namespace = $this->my_namespace . $this->my_version;
+    $base      = 'paypal';
+
+          register_rest_route( $namespace, '/' . $base.'/registerPayment', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'register_payment_paypal' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+  }
    
     // Register our REST Server
     public function hook_rest_server(){
@@ -92,6 +155,9 @@ class RESTServer extends WP_REST_Controller {
       add_action( 'rest_api_init', array( $this, 'register_routes' ) );
       add_action( 'rest_api_init', array( $this, 'inscribed_by_course' ) );
       add_action( 'rest_api_init', array( $this, 'forum' ) );
+      add_action( 'rest_api_init', array( $this, 'badges' ) );
+      add_action( 'rest_api_init', array( $this, 'stripe' ) );
+      add_action( 'rest_api_init', array( $this, 'paypal' ) );
 
     }
    
@@ -258,9 +324,10 @@ class RESTServer extends WP_REST_Controller {
   
       global $wpdb;
       $user=$request->get_param( 'user' );
+      $id_course=$request->get_param( 'id_course' );
       $idLesson=$request->get_param( 'id_lesson' );
       $idEvaluation=$request->get_param( 'id_evaluation' );
-      $query = "SELECT * FROM `user_evaluation` WHERE user='$user' and id_lesson='$idLesson' and id_evaluation='$idEvaluation'";
+      $query = "SELECT * FROM `user_evaluation` WHERE user='$user' and id_course='$id_course' and id_lesson='$idLesson' and id_evaluation='$idEvaluation'";
       $list = $wpdb->get_results($query);
       return $list;
     }
@@ -268,12 +335,41 @@ class RESTServer extends WP_REST_Controller {
     public function add_evaluation_by_user( WP_REST_Request $request ){
   
       global $wpdb;
+
       $user=$request->get_param( 'user' );
+      $id_course=$request->get_param( 'id_course' );
       $idLesson=$request->get_param( 'id_lesson' );
       $idEvaluation=$request->get_param( 'id_evaluation' );
       $score=$request->get_param( 'score' );
+      //$approve=$request->get_param( 'approve' );
 
-      $query = "INSERT INTO user_evaluation (user, id_lesson, id_evaluation, puntaje) VALUES ('$user', '$idLesson','$idEvaluation','$score')"  ;
+      $query = "INSERT INTO user_evaluation (user, id_course, id_lesson, id_evaluation, puntaje) VALUES ('$user', '$id_course','$idLesson','$idEvaluation','$score')"  ;
+      $list = $wpdb->get_results($query);
+      return $list;
+    }
+
+    public function update_evaluation_by_user( WP_REST_Request $request ){
+  
+      global $wpdb;
+      $user=$request->get_param( 'user' );
+      $id_course=$request->get_param( 'id_course' );
+      $idLesson=$request->get_param( 'id_lesson' );
+      $idEvaluation=$request->get_param( 'id_evaluation' );
+      $score=$request->get_param( 'score' );
+      //$approve=$request->get_param( 'approve' );
+
+      $query = "UPDATE user_evaluation SET puntaje='$score' WHERE user='$user' and id_course='$id_course' and id_lesson='$idLesson' and id_evaluation='$idEvaluation'" ;
+    
+      $list = $wpdb->get_results($query);
+      return "$list";
+    }
+
+    public function get_first_evaluation_by_user( WP_REST_Request $request ){
+  
+      global $wpdb;
+      $user=$request->get_param( 'user' );
+      $id_course=$request->get_param( 'id_course' );
+      $query = "SELECT COUNT(*) as Cantidad FROM `user_evaluation` WHERE user='$user' and id_course='$id_course'";
       $list = $wpdb->get_results($query);
       return $list;
     }
@@ -458,5 +554,90 @@ class RESTServer extends WP_REST_Controller {
       return $list;
      
     }
+
+    public function get_user_badges( WP_REST_Request $request ){
+
+    global $wpdb;
+
+    
+     $user=$request->get_param( 'username' );
+
+    $query = "SELECT * FROM user_badges WHERE user='$user'";
+    $list = $wpdb->get_results($query);
+    return $list;
+   
+    
+  }
+
+  public function add_user_badges( WP_REST_Request $request ){
+
+
+    global $wpdb;
+
+    
+     $user=$request->get_param( 'username' );
+     $id_badge=$request->get_param( 'id_badge' );
+
+    $query = "INSERT INTO user_badges (user, id_badge) VALUES ('$user', '$id_badge')";
+    $list = $wpdb->get_results($query);
+    return $list;
+   
+    
+  }
+
+  public function add_stripe_charge( WP_REST_Request $request ){
+
+
+   \Stripe\Stripe::setApiKey('sk_test_Ut3arRU2scvEhhWmFBwIHFdq00UmPRRi2J');
+
+   $token=$request->get_param( 'token' );
+   $monto=$request->get_param( 'monto' );
+
+// `source` is obtained with Stripe.js; see https://stripe.com/docs/payments/accept-a-payment-charges#web-create-token
+return \Stripe\Charge::create([
+  'amount' => $monto,
+  'currency' => 'usd',
+  'source' => $token,
+  'description' => 'My First Test Charge (created for API docs)',
+]);
+   
+    
+  }
+
+  public function register_payment_stripe( WP_REST_Request $request ){
+
+
+     global $wpdb;
+
+    
+     $user=$request->get_param( 'username' );
+     $id_course=$request->get_param( 'id_course' );
+     $id_transaction=$request->get_param( 'id_transaction' );
+     $monto=$request->get_param( 'monto' );
+
+
+    $query = "INSERT INTO user_stripe (user, id_course, id_transaction, monto) VALUES ('$user', '$id_course','$id_transaction','$monto')";
+    $list = $wpdb->get_results($query);
+    return $list;
+    
+  }
+
+  public function register_payment_paypal( WP_REST_Request $request ){
+
+
+     global $wpdb;
+
+    
+     $user=$request->get_param( 'username' );
+     $id_course=$request->get_param( 'id_course' );
+     $id_transaction=$request->get_param( 'id_transaction' );
+     $monto=$request->get_param( 'monto' );
+
+
+    $query = "INSERT INTO user_paypal (user, id_course, id_transaction, monto) VALUES ('$user', '$id_course','$id_transaction','$monto')";
+    $list = $wpdb->get_results($query);
+    return $list;
+    
+  }
     
   }
