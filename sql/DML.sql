@@ -44,6 +44,9 @@ create table user_paypal (id int UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	user VARCHAR(255) not null, id_course int not null, id_transaction VARCHAR(255) not null, monto int not null,reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);  
 
 
+create table user_certificate (id int UNSIGNED AUTO_INCREMENT PRIMARY KEY, 
+	user VARCHAR(255) not null, id_course int not null, id_certificate VARCHAR(255) not null, url VARCHAR(255) not null,reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);  
+
 
 INSERT INTO lesson_user_view (user,id_course,id_lesson) VALUES ("aquilesal",228,198);
 
@@ -53,7 +56,11 @@ UPDATE user_evaluation SET puntaje='35' WHERE user='aquilesal' and id_course='22
       and id_lesson='1' and id_evaluation='2';
 
 
-INSERT INTO user_evaluation (user,id_lesson,id_evaluation,puntaje) VALUES ("aquilesal2",198,102,3);
+INSERT INTO user_evaluation (user,id_course,id_lesson,id_evaluation,puntaje,aprobado) VALUES ("aquilesal",265,198,102,80,true);
+
+INSERT INTO user_evaluation (user,id_course,id_lesson,id_evaluation,puntaje,aprobado) VALUES ("aquilesal",265,274,275,75,true);
+
+INSERT INTO user_certificate (user,id_course,id_certificate,url) VALUES ("aquilesal",265,274,"url");
 
 
 DELIMITER $$
@@ -78,6 +85,16 @@ BEGIN
 END$$
 DELIMITER ;
 
+DELIMITER $$
+CREATE TRIGGER validate_exist_user_certificate
+BEFORE INSERT ON user_certificate
+FOR EACH ROW
+BEGIN
+  IF (SELECT count(*) FROM user_certificate WHERE user = NEW.user AND id_course = NEW.id_course) > 0 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'You can not insert record';
+  END IF ;
+END$$
+DELIMITER ;
+
 
 DROP TRIGGER validate_exist_user_evaluation;
 
@@ -92,5 +109,12 @@ DELETE FROM user_inscribed WHERE usuario="aquilesal";
 Credenciales para probar paypal
 sb-hrsp31596553@personal.example.com
 t>V?2c/K
+
+
+
+
+ALTER TABLE user_evaluation
+  ADD id_course int not null
+    AFTER user;
 
 

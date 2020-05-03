@@ -8,7 +8,23 @@
  */
 
 require_once 'stripe/init.php';
+require('fpdf181/fpdf.php');
+require('phpqrcode/qrlib.php');
 use Stripe\Stripe;
+
+
+class PDF extends FPDF 
+{ 
+
+function Footer() 
+{ 
+
+$this->SetY(-27); 
+$this->SetFont('Arial','I',8); 
+
+$this->Cell(0,10,'This certificate has been ©  © produced by ',0,0,'R'); 
+} 
+} 
 
 class RESTServer extends WP_REST_Controller {
  
@@ -121,6 +137,22 @@ class RESTServer extends WP_REST_Controller {
         ) );
   }
 
+  public function certificate() {
+    $namespace = $this->my_namespace . $this->my_version;
+    $base      = 'certificate';
+     register_rest_route( $namespace, '/' . $base.'/generate', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'get_certificate' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+      register_rest_route( $namespace, '/' . $base.'/findByUser', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'find_certificate' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+
+  }
+
   public function stripe() {
     $namespace = $this->my_namespace . $this->my_version;
     $base      = 'stripe';
@@ -158,6 +190,7 @@ class RESTServer extends WP_REST_Controller {
       add_action( 'rest_api_init', array( $this, 'badges' ) );
       add_action( 'rest_api_init', array( $this, 'stripe' ) );
       add_action( 'rest_api_init', array( $this, 'paypal' ) );
+      add_action( 'rest_api_init', array( $this, 'certificate' ) );
 
     }
    
@@ -341,9 +374,9 @@ class RESTServer extends WP_REST_Controller {
       $idLesson=$request->get_param( 'id_lesson' );
       $idEvaluation=$request->get_param( 'id_evaluation' );
       $score=$request->get_param( 'score' );
-      //$approve=$request->get_param( 'approve' );
+      $approve=$request->get_param( 'approve' );
 
-      $query = "INSERT INTO user_evaluation (user, id_course, id_lesson, id_evaluation, puntaje) VALUES ('$user', '$id_course','$idLesson','$idEvaluation','$score')"  ;
+      $query = "INSERT INTO user_evaluation (user, id_course, id_lesson, id_evaluation, puntaje,aprobado) VALUES ('$user', '$id_course','$idLesson','$idEvaluation','$score','$approve')"  ;
       $list = $wpdb->get_results($query);
       return $list;
     }
@@ -356,9 +389,9 @@ class RESTServer extends WP_REST_Controller {
       $idLesson=$request->get_param( 'id_lesson' );
       $idEvaluation=$request->get_param( 'id_evaluation' );
       $score=$request->get_param( 'score' );
-      //$approve=$request->get_param( 'approve' );
+      $approve=$request->get_param( 'approve' );
 
-      $query = "UPDATE user_evaluation SET puntaje='$score' WHERE user='$user' and id_course='$id_course' and id_lesson='$idLesson' and id_evaluation='$idEvaluation'" ;
+      $query = "UPDATE user_evaluation SET puntaje='$score' and set aprobado='$approve' WHERE user='$user' and id_course='$id_course' and id_lesson='$idLesson' and id_evaluation='$idEvaluation'" ;
     
       $list = $wpdb->get_results($query);
       return "$list";
@@ -639,5 +672,259 @@ return \Stripe\Charge::create([
     return $list;
     
   }
+
+  public function find_certificate( WP_REST_Request $request ){
+
+    global $wpdb;
+
+    
+    $user=$request->get_param( 'username' );
+
+    $query = "SELECT * FROM user_certificate WHERE user='$user'";
+    $list = $wpdb->get_results($query);
+    return $list;
+
+ 
+   //return QRcode::png("http://192.168.99.100:8000/wp-content/uploads/2020/05/243886323.pdf", "test4.png"); 
+
+
+
+
+    // $dir = wp_get_upload_dir()[path];
+    // $filename=$dir."/".$randomNumber.".pdf";
+    // $url = wp_get_upload_dir()[url]."/".$randomNumber.".pdf";
+
+    // QRcode::png("http://192.168.99.100:8000/wp-content/uploads/2020/05/243886323.pdf", $dir."/test4.png"); 
+
+    //   return wp_get_upload_dir()[url]."/test4.png";
     
   }
+
+
+  public function get_certificate( WP_REST_Request $request ){
+
+    global $wpdb;
+
+    // $params = array('where' => "post_parent = '265'");
+
+     // // Example #1
+     //  $mycurso = pods_data ( 'curso', '265' );
+
+     //  $mymodulo = pods( 'modulo', '203' );
+
+     //  $myleccion = pods( 'leccion', '273' );
+
+    $userRequest=$request->get_param( 'username' );
+    $id_course=$request->get_param( 'id_course' );
+
+
+    //Obtengo el total de evaluaciones que tiene el curso
+     
+
+    $totalEvaluation = $this->searchTotalEvaluation($id_course);
+
+    //valido que el usuario aprobara min el 80% de las evaluaciones del curso
+
+    $query = "SELECT COUNT(*) as cantidadAprobado  FROM user_evaluation where user='$userRequest' and id_course='$id_course' and aprobado=true";
+    $list = $wpdb->get_results($query);
+
+    $cantidad=$list[0]->cantidadAprobado;
+
+
+    $Porcentaje= ($cantidad*100)/$totalEvaluation;
+
+    if($Porcentaje>=80){
+
+      $podCurso = pods( 'curso', $id_course );
+
+      $nombreCurso = $podCurso->field( 'nombre' );
+
+
+      $user = pods( 'user', '1' );
+
+      $nombreUser = $user->field( 'nombre' );
+
+      $apellidoUser = $user->field( 'apellido' );
+
+      $nombre=$nombreUser." ".$apellidoUser;
+
+      $randomNumber = rand();
+      
+      $response= $this->generateCertificate($nombreCurso,$nombre,$randomNumber);
+
+      $query = "INSERT INTO user_certificate (user, id_course, id_certificate, url) VALUES ('$userRequest', '$id_course','$randomNumber','$response')";
+      $list = $wpdb->get_results($query);
+
+
+      return $response;
+
+    }
+
+    else
+    {
+      return "El porcentaje es ".$Porcentaje."% "."Se necesita minimo 80% para generar un certificado.";
+    }
+    
+  }
+
+
+  public function searchTotalEvaluation($id_course){
+
+      $totalEvaluacionesCurso=0;
+
+      $podCurso = pods( 'curso', $id_course );
+
+      $arrayModulos = $podCurso->field( 'modulo' );
+
+      if ( ! empty( $arrayModulos ) ) {
+        foreach ( $arrayModulos as $rel ) { 
+          $id = $rel[ 'ID' ];
+
+
+          $podModulo = pods( 'modulo', $id);
+
+          $arrayLecciones = $podModulo->field( 'leccion' );
+
+          if ( ! empty( $arrayLecciones ) ) {
+            foreach ( $arrayLecciones as $rel ) { 
+              $id = $rel[ 'ID' ];
+
+              $podLeccion = pods( 'leccion', $id );
+
+              $arrayEvaluacion = $podLeccion->field( 'evaluacion' );
+
+              if($arrayEvaluacion){
+                $totalEvaluacionesCurso++;
+              }
+
+            }
+
+          }
+       
+   
+      } 
+    }
+
+    return $totalEvaluacionesCurso;
+  } 
+
+ 
+  public function generateCertificate($nombreCurso,$nombreUser,$randomNumber){
+
+    global $wpdb;
+
+
+
+      
+      $dir = wp_get_upload_dir()[path];
+      $filename=$dir."/".$randomNumber.".pdf";
+      $url = wp_get_upload_dir()[url]."/".$randomNumber.".pdf";
+
+      
+      $randomNumberQr = rand();
+      $filenameQr=$dir."/".$randomNumberQr.".png";
+      $urlQr = wp_get_upload_dir()[url]."/".$randomNumberQr.".png";
+
+      QRcode::png($url, $filenameQr); 
+
+      // $pdf = new FPDF();
+      // $pdf->AddPage();
+      // $pdf->SetFont('Arial','B',16);
+      // $pdf->Cell(40,10,'Hello World!');
+      // $content = $pdf->Output($filename,'F');
+
+
+      $pdf = new FPDF('L','pt','A4'); 
+
+      //Loading data 
+      $pdf->SetTopMargin(20); $pdf->SetLeftMargin(20); $pdf->SetRightMargin(20); 
+
+      $pdf->AddPage(); 
+       //$pdf->Image('fpdf181/ucab_logo.jpg'); 
+      $pdf->Image('http://192.168.99.100:8000/wp-content/uploads/2020/04/ucab_logo.jpg',325,0,200,0,'JPG');
+      $pdf->Image($urlQr,700,50,100,0,'PNG');
+      $pdf->Image("http://192.168.99.100:8000/wp-content/uploads/2020/05/franja_amarilla.png",0,0,850,0,'PNG');
+      $pdf->Image("http://192.168.99.100:8000/wp-content/uploads/2020/05/franja_azul.png",828,0,15,0,'PNG');
+      $pdf->Image("http://192.168.99.100:8000/wp-content/uploads/2020/05/franja_verde.png",0,580,850,15,'PNG');
+     
+    // // Print the certificate logo  
+    // $pdf->Image("fpdf181/tt1.png", 140, 180, 240);   
+
+      $pdf->SetFont('times','I',20); 
+      $pdf->SetXY(0,220); 
+      $pdf->Cell(0,0,"Este reconocimiento es para",0,0,'C'); 
+
+      $pdf->SetFont('times','B',40); 
+      $pdf->SetXY(0,280); 
+      $pdf->Cell(0,0,utf8_decode($nombreUser),0,0,'C'); 
+
+
+      $pdf->SetFont('times','I',20); 
+      $pdf->SetXY(0,330); 
+      $pdf->Cell(520,0,"por completar el curso de",0,'C',0); 
+
+
+      $pdf->SetFont('times','B',40); 
+      $pdf->SetXY(0,380); 
+      $pdf->Cell(0,0,utf8_decode($nombreCurso),0,0,'C'); 
+
+       // $pdf->SetFont('times','I',20); 
+       // $pdf->SetXY(0,100);
+       // $pdf->Cell(20,350,"por completar el curso de ",0,0,'C'); 
+
+      // $pdf->SetFont('times','B',40); 
+      // $pdf->SetXY(100,100); 
+      // $pdf->Cell(25,550,"Programación Basica",0,0,'C'); 
+
+      // $pdf->SetFont('Arial','I',20); 
+      // $pdf->SetXY(100,350); 
+      // $message = "ON COMPLETION OF"; 
+      // $pdf->MultiCell(650,20,"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel velit vulputate lorem sollicitudin dictum. Sed vel commodo velit. Sed tincidunt nisi ac malesuada commodo. Maecenas suscipit augue vel nibh rutrum, sit amet lacinia diam rutrum. Integer gravida ipsum justo, vitae faucibus lectus mollis vitae. Curabitur et orci sit amet magna rhoncus egestas vitae sed odio. Suspendisse sit amet tempus eros. Cras rhoncus lacus id est laoreet fringilla.",0,'J',0); 
+
+
+      // $pdf->SetFont('Arial','I',34); 
+      // $pdf->SetXY(100,500); 
+
+      // $pdf->Cell(330,25,"Alumno","B",0,'C',0); 
+
+
+      
+
+
+      $pdf->SetFont('Arial','B',15); 
+      $pdf->SetXY(20,500); 
+      $pdf->Cell(330,10,utf8_decode("Gustavo Peña Torbay"),0,0,'C',0); 
+      $pdf->SetFont('Arial','I',15); 
+      $pdf->SetXY(20,520); 
+      $pdf->Cell(330,10,"Vicerrector Academico de la Ucab",0,0,'C',0); 
+
+      $pdf->SetFont('Arial','B',15); 
+      $pdf->SetXY(250,500); 
+      $pdf->Cell(330,10,"Silvana Campagnaro",0,0,'C',0); 
+      $pdf->SetFont('Arial','I',15); 
+      $pdf->SetXY(250,520); 
+      $pdf->Cell(330,10,"Directora CIAP-UCAB",0,0,'C',0); 
+
+      $pdf->SetFont('Arial','B',15); 
+      $pdf->SetXY(480,500); 
+      $pdf->Cell(330,10,utf8_decode("Marysabel Suárez V."),0,0,'C',0); 
+      $pdf->SetFont('Arial','I',15); 
+      $pdf->SetXY(480,520); 
+      $pdf->Cell(330,10,utf8_decode("Directora Centro de Estudios en Línea"),0,0,'C',0); 
+
+//       $pdf->Cell(150,'102 South Avenue',1,0,'L',true);
+// $pdf->Ln();
+// $pdf->Cell(150,'Suite 107',1,0,'L',true);
+// $pdf->Ln();
+// $pdf->Cell(150,'Scottsdale AZ 85260',1,0,'L',true);
+// $pdf->Ln();
+// $pdf->Cell(150,'111-000-1111',1,0,'L',true);
+
+      $pdf->Output($filename,'F'); 
+
+      return $url;
+
+  }
+
+
+}
