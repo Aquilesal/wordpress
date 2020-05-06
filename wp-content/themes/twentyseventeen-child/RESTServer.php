@@ -43,6 +43,11 @@ class RESTServer extends WP_REST_Controller {
           )
       )  );
 
+      register_rest_route( $namespace, '/user/getInfo', array(
+            'methods'         => WP_REST_Server::CREATABLE,
+            'callback'        => array( $this, 'get_user_info' ),
+            'permission_callback'   => array( $this, 'get_permission' )
+          ) );
 
 
       register_rest_route( $namespace, 'users/courses/user_inscribed_by_username', array(
@@ -107,6 +112,14 @@ class RESTServer extends WP_REST_Controller {
           'permission_callback'   => array( $this, 'get_permission' )
         ) );
 
+          register_rest_route( $namespace, '/user/getMoreViewed', array(
+        array(
+            'methods'         => WP_REST_Server::CREATABLE,
+            'callback'        => array( $this, 'get_most_viewed' ),
+            'permission_callback'   => array( $this, 'add_permission' )
+          )
+      )  );
+
     }
   
     public function inscribed_by_course() {
@@ -127,6 +140,11 @@ class RESTServer extends WP_REST_Controller {
      register_rest_route( $namespace, '/' . $base.'/getByUser', array(
           'methods'         => WP_REST_Server::CREATABLE,
           'callback'        => array( $this, 'get_user_badges' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+     register_rest_route( $namespace, '/' . $base.'/getAll', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'get_all_user_badges' ),
           'permission_callback'   => array( $this, 'get_permission' )
         ) );
 
@@ -180,6 +198,34 @@ class RESTServer extends WP_REST_Controller {
           'permission_callback'   => array( $this, 'get_permission' )
         ) );
   }
+
+  public function valoration() {
+    $namespace = $this->my_namespace . $this->my_version;
+    $base      = 'valoration';
+
+          register_rest_route( $namespace, '/' . $base.'/addValoration', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'add_valoration' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+
+          register_rest_route( $namespace, '/' . $base.'/updateValoration', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'update_valoration' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+
+          register_rest_route( $namespace, '/' . $base.'/getValoration', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'get_valoration' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+          register_rest_route( $namespace, '/' . $base.'/getValorationAllCourses', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'get_valoration_allCourses' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+  }
    
     // Register our REST Server
     public function hook_rest_server(){
@@ -191,6 +237,7 @@ class RESTServer extends WP_REST_Controller {
       add_action( 'rest_api_init', array( $this, 'stripe' ) );
       add_action( 'rest_api_init', array( $this, 'paypal' ) );
       add_action( 'rest_api_init', array( $this, 'certificate' ) );
+      add_action( 'rest_api_init', array( $this, 'valoration' ) );
 
     }
    
@@ -394,7 +441,7 @@ class RESTServer extends WP_REST_Controller {
       $query = "UPDATE user_evaluation SET puntaje='$score' and set aprobado='$approve' WHERE user='$user' and id_course='$id_course' and id_lesson='$idLesson' and id_evaluation='$idEvaluation'" ;
     
       $list = $wpdb->get_results($query);
-      return "$list";
+      return $list;
     }
 
     public function get_first_evaluation_by_user( WP_REST_Request $request ){
@@ -593,9 +640,21 @@ class RESTServer extends WP_REST_Controller {
     global $wpdb;
 
     
-     $user=$request->get_param( 'username' );
-
+    $user=$request->get_param( 'username' );
     $query = "SELECT * FROM user_badges WHERE user='$user'";
+    $list = $wpdb->get_results($query);
+    return $list;
+   
+    
+  }
+
+   public function get_all_user_badges( WP_REST_Request $request ){
+
+    global $wpdb;
+
+    
+     $user=$request->get_param( 'username' );
+    $query = "SELECT id_badge, count(id_badge) as total from user_badges WHERE user='$user' group by id_badge order by total desc";
     $list = $wpdb->get_results($query);
     return $list;
    
@@ -768,6 +827,17 @@ return \Stripe\Charge::create([
   }
 
 
+  public function get_user_info(WP_REST_Request $request ){
+    global $wpdb;
+
+     $userRequest=$request->get_param( 'username' );
+
+     $user = pods( 'user', '1' );
+
+     return $user;
+  }
+
+
   public function searchTotalEvaluation($id_course){
 
       $totalEvaluacionesCurso=0;
@@ -925,6 +995,61 @@ return \Stripe\Charge::create([
       return $url;
 
   }
+
+
+      public function get_valoration( WP_REST_Request $request ){
+  
+      global $wpdb;
+      $id_course=$request->get_param( 'id_course' );
+      $query = "SELECT AVG(puntaje) as valoration FROM course_valoration WHERE id_course='$id_course'";
+      $list = $wpdb->get_results($query);
+      return $list[0]->valoration;
+    }
+
+    public function get_valoration_allCourses( WP_REST_Request $request ){
+  
+      global $wpdb;
+      $id_course=$request->get_param( 'id_course' );
+      $query = "SELECT id_course, AVG(puntaje) as valoration FROM course_valoration group by id_course order by valoration desc ";
+      $list = $wpdb->get_results($query);
+      return $list;
+    }
+
+    public function add_valoration( WP_REST_Request $request ){
+  
+      global $wpdb;
+
+      $user=$request->get_param( 'user' );
+      $id_course=$request->get_param( 'id_course' );
+      $puntaje=$request->get_param( 'puntaje' );
+
+      $query = "INSERT INTO course_valoration (user, id_course, puntaje) VALUES ('$user', '$id_course','$puntaje')"  ;
+      $list = $wpdb->get_results($query);
+      return $list;
+    }
+
+    public function update_valoration( WP_REST_Request $request ){
+  
+      global $wpdb;
+      $user=$request->get_param( 'user' );
+      $id_course=$request->get_param( 'id_course' );
+      $puntaje=$request->get_param( 'puntaje' );
+
+      $query = "UPDATE course_valoration SET puntaje='$puntaje' WHERE user='$user' and id_course='$id_course'" ;
+    
+      $list = $wpdb->get_results($query);
+      return $list;
+    }
+
+
+    public function get_most_viewed( WP_REST_Request $request ){
+  
+      global $wpdb;
+
+      $query = "SELECT id_curso, count(id_curso) as total from user_inscribed group by id_curso order by total desc";
+      $list = $wpdb->get_results($query);
+      return $list;
+    }
 
 
 }

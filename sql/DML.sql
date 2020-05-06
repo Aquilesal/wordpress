@@ -48,6 +48,10 @@ create table user_certificate (id int UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	user VARCHAR(255) not null, id_course int not null, id_certificate VARCHAR(255) not null, url VARCHAR(255) not null,reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);  
 
 
+create table course_valoration (id int UNSIGNED AUTO_INCREMENT PRIMARY KEY,user VARCHAR(255) not null,id_course int not null, puntaje int not null, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);
+
+
+
 INSERT INTO lesson_user_view (user,id_course,id_lesson) VALUES ("aquilesal",228,198);
 
 INSERT INTO user_evaluation (user, id_lesson, id_course, id_evaluation, puntaje) VALUES ('aquilesal', '228','198','5','10');
@@ -61,6 +65,12 @@ INSERT INTO user_evaluation (user,id_course,id_lesson,id_evaluation,puntaje,apro
 INSERT INTO user_evaluation (user,id_course,id_lesson,id_evaluation,puntaje,aprobado) VALUES ("aquilesal",265,274,275,75,true);
 
 INSERT INTO user_certificate (user,id_course,id_certificate,url) VALUES ("aquilesal",265,274,"url");
+
+INSERT INTO user_inscribed (usuario,id_curso,lastLesson) VALUES ("aquilesal",266,274);
+
+INSERT INTO course_valoration (user,id_course,puntaje) VALUES ("aquilesal",100,2);
+
+select id_curso, count(id_curso) as total from user_inscribed group by id_curso order by total desc;
 
 
 DELIMITER $$
@@ -95,10 +105,22 @@ BEGIN
 END$$
 DELIMITER ;
 
+DELIMITER $$
+CREATE TRIGGER validate_only_one_time_valoration
+BEFORE INSERT ON course_valoration
+FOR EACH ROW
+BEGIN
+  IF (SELECT count(*) FROM course_valoration WHERE user = NEW.user AND id_course = NEW.id_course) > 0 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'You can not insert record';
+  END IF ;
+END$$
+DELIMITER ;
+
 
 DROP TRIGGER validate_exist_user_evaluation;
 
 DROP TRIGGER validate_exist_lesson_user_view;
+
+DROP TRIGGER validate_only_one_time_valoration;
 
 DROP Table user_evaluation;
 
