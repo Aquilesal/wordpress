@@ -1001,7 +1001,7 @@ return \Stripe\Charge::create([
   
       global $wpdb;
       $id_course=$request->get_param( 'id_course' );
-      $query = "SELECT AVG(puntaje) as valoration FROM course_valoration WHERE id_course='$id_course'";
+      $query = "SELECT AVG(puntaje) as valoration, COUNT(user) as total FROM course_valoration WHERE id_course='$id_course'";
       $list = $wpdb->get_results($query);
       return $list[0]->valoration;
     }

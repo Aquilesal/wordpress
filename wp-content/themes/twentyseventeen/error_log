@@ -1,0 +1,17 @@
+[02-Apr-2020 16:54:01 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function get_template_part() in /home/aquitcoi/public_html/wp-content/themes/twentyseventeen/footer.php:22
+Stack trace:
+#0 {main}
+  thrown in /home/aquitcoi/public_html/wp-content/themes/twentyseventeen/footer.php on line 22
+[02-Apr-2020 17:16:31 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function get_template_part() in /home/aquitcoi/public_html/wp-content/themes/twentyseventeen/footer.php:22
+Stack trace:
+#0 {main}
+  thrown in /home/aquitcoi/public_html/wp-content/themes/twentyseventeen/footer.php on line 22
+[02-Apr-2020 17:41:18 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function get_header() in /home/aquitcoi/public_html/wp-content/themes/twentyseventeen/404.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/aquitcoi/public_html/wp-content/themes/twentyseventeen/404.php on line 13
+[03-Apr-2020 04:05:50 America/New_York] PHP Notice:  Undefined index: wp_version in /home/aquitcoi/public_html/wp-content/themes/twentyseventeen/functions.php on line 15
+[03-Apr-2020 04:05:50 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function get_template_directory() in /home/aquitcoi/public_html/wp-content/themes/twentyseventeen/functions.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/aquitcoi/public_html/wp-content/themes/twentyseventeen/functions.php on line 16

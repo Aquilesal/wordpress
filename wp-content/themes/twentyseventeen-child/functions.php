@@ -16,6 +16,10 @@
   }
   add_action( 'wp_enqueue_scripts', 'enqueue_styles_child_theme' );
 
+
+
+
+
   // add_action( 'rest_api_init', function () {
   //   register_rest_route( 'restos/v1', '/all', array(
   //     'methods' => 'GET',
