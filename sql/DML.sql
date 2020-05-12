@@ -56,8 +56,8 @@ INSERT INTO lesson_user_view (user,id_course,id_lesson) VALUES ("aquilesal",228,
 
 INSERT INTO user_evaluation (user, id_lesson, id_course, id_evaluation, puntaje) VALUES ('aquilesal', '228','198','5','10');
 
-UPDATE user_evaluation SET puntaje='35' WHERE user='aquilesal' and id_course='228' 
-      and id_lesson='1' and id_evaluation='2';
+UPDATE user_evaluation SET puntaje='87' WHERE user='aquilesal' and id_course='265' 
+      and id_lesson='198' and id_evaluation='102';
 
 
 INSERT INTO user_evaluation (user,id_course,id_lesson,id_evaluation,puntaje,aprobado) VALUES ("aquilesal",265,198,102,80,true);

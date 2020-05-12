@@ -1010,7 +1010,7 @@ return \Stripe\Charge::create([
   
       global $wpdb;
       $id_course=$request->get_param( 'id_course' );
-      $query = "SELECT id_course, AVG(puntaje) as valoration FROM course_valoration group by id_course order by valoration desc ";
+      $query = "SELECT id_course, AVG(puntaje) as valoration, COUNT(user) as total FROM course_valoration group by id_course order by valoration desc ";
       $list = $wpdb->get_results($query);
       return $list;
     }
@@ -1023,9 +1023,21 @@ return \Stripe\Charge::create([
       $id_course=$request->get_param( 'id_course' );
       $puntaje=$request->get_param( 'puntaje' );
 
-      $query = "INSERT INTO course_valoration (user, id_course, puntaje) VALUES ('$user', '$id_course','$puntaje')"  ;
+      $query = "SELECT * FROM course_valoration WHERE user='$user' AND id_course='$id_course'";
       $list = $wpdb->get_results($query);
-      return $list;
+
+      if (count($list)>0){
+        $query = "UPDATE course_valoration SET puntaje='$puntaje' WHERE user='$user' and id_course='$id_course'" ;
+        $list = $wpdb->get_results($query);
+        return $list;
+      }
+
+      else{
+        $query = "INSERT INTO course_valoration (user, id_course, puntaje) VALUES ('$user', '$id_course','$puntaje')"  ;
+        $list = $wpdb->get_results($query);
+        return $list;
+      }
+      
     }
 
     public function update_valoration( WP_REST_Request $request ){
