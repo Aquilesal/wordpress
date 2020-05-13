@@ -423,10 +423,23 @@ class RESTServer extends WP_REST_Controller {
       $score=$request->get_param( 'score' );
       $approve=$request->get_param( 'approve' );
 
-      $query = "INSERT INTO user_evaluation (user, id_course, id_lesson, id_evaluation, puntaje,aprobado) VALUES ('$user', '$id_course','$idLesson','$idEvaluation','$score','$approve')"  ;
+      $query = "SELECT * FROM user_evaluation WHERE user='$user' AND id_course='$id_course' AND id_lesson='$idLesson' AND id_evaluation='$idEvaluation'";
+      $list = $wpdb->get_results($query);
+
+       if (count($list)>0){
+        $query = "UPDATE user_evaluation SET puntaje='$score',aprobado='$approve' WHERE user='$user' AND id_course='$id_course' AND id_lesson='$idLesson' AND id_evaluation='$idEvaluation'" ;
+        $list = $wpdb->get_results($query);
+        return $list;
+      }
+
+      else{
+       $query = "INSERT INTO user_evaluation (user, id_course, id_lesson, id_evaluation, puntaje,aprobado) VALUES ('$user', '$id_course','$idLesson','$idEvaluation','$score','$approve')"  ;
       $list = $wpdb->get_results($query);
       return $list;
+      }
+      
     }
+
 
     public function update_evaluation_by_user( WP_REST_Request $request ){
   

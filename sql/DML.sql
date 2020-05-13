@@ -140,3 +140,4 @@ ALTER TABLE user_evaluation
     AFTER user;
 
 
+UPDATE course_valoration SET puntaje='14',puntaje=true WHERE user='aquilesal' AND id_course='265';
