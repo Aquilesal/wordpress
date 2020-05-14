@@ -44,7 +44,11 @@ create table user_paypal (id int UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	user VARCHAR(255) not null, id_course int not null, id_transaction VARCHAR(255) not null, monto int not null,reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);  
 
 
+
 create table user_certificate (id int UNSIGNED AUTO_INCREMENT PRIMARY KEY, 
+	user VARCHAR(255) not null, id_course int not null, id_certificate VARCHAR(255) not null, url VARCHAR(255) not null,reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);  
+
+create table user_certificate_physical (id int UNSIGNED AUTO_INCREMENT PRIMARY KEY, 
 	user VARCHAR(255) not null, id_course int not null, id_certificate VARCHAR(255) not null, url VARCHAR(255) not null,reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);  
 
 
@@ -56,8 +60,7 @@ INSERT INTO lesson_user_view (user,id_course,id_lesson) VALUES ("aquilesal",228,
 
 INSERT INTO user_evaluation (user, id_lesson, id_course, id_evaluation, puntaje) VALUES ('aquilesal', '228','198','5','10');
 
-UPDATE user_evaluation SET puntaje='87' WHERE user='aquilesal' and id_course='265' 
-      and id_lesson='198' and id_evaluation='102';
+UPDATE user_evaluation SET aprobado=true WHERE user='aquilesal5' and id_course='282';
 
 
 INSERT INTO user_evaluation (user,id_course,id_lesson,id_evaluation,puntaje,aprobado) VALUES ("aquilesal",265,198,102,80,true);
@@ -106,6 +109,16 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
+CREATE TRIGGER validate_exist_user_certificate_physical
+BEFORE INSERT ON user_certificate_physical
+FOR EACH ROW
+BEGIN
+  IF (SELECT count(*) FROM user_certificate_physical WHERE user = NEW.user AND id_course = NEW.id_course) > 0 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'You can not insert record';
+  END IF ;
+END$$
+DELIMITER ;
+
+DELIMITER $$
 CREATE TRIGGER validate_only_one_time_valoration
 BEFORE INSERT ON course_valoration
 FOR EACH ROW
@@ -140,4 +153,4 @@ ALTER TABLE user_evaluation
     AFTER user;
 
 
-UPDATE course_valoration SET puntaje='14',puntaje=true WHERE user='aquilesal' AND id_course='265';
+UPDATE course_valoration SET puntaje='14',puntaje=true WHERE user='aquilesal' AND id_course='265' AND id_lesson='198' AND id_evaluation='102';

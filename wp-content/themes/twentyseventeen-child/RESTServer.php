@@ -112,6 +112,11 @@ class RESTServer extends WP_REST_Controller {
           'permission_callback'   => array( $this, 'get_permission' )
         ) );
 
+          register_rest_route($namespace, '/user/getByUsername', array(
+          'methods'             => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'get_user_list' ),
+          'permission_callback'   => array( $this, 'add_permission' )
+      ));
           register_rest_route( $namespace, '/user/getMoreViewed', array(
         array(
             'methods'         => WP_REST_Server::CREATABLE,
@@ -166,6 +171,33 @@ class RESTServer extends WP_REST_Controller {
       register_rest_route( $namespace, '/' . $base.'/findByUser', array(
           'methods'         => WP_REST_Server::CREATABLE,
           'callback'        => array( $this, 'find_certificate' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+      register_rest_route( $namespace, '/' . $base.'/findByCourse', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'find_certificate_course' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+      register_rest_route( $namespace, '/' . $base.'/totalApprove', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'total_Approve' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+
+
+      register_rest_route( $namespace, '/' . $base.'/generatePhysical', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'get_certificate_physical' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+      register_rest_route( $namespace, '/' . $base.'/findByUserPhysical', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'find_certificate_physical' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+      register_rest_route( $namespace, '/' . $base.'/findByCoursePhysical', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'find_certificate_physical_course' ),
           'permission_callback'   => array( $this, 'get_permission' )
         ) );
 
@@ -249,6 +281,28 @@ class RESTServer extends WP_REST_Controller {
         // This approach blocks the endpoint operation. You could alternatively do this by an un-blocking approach, by returning false here and changing the permissions check.
         return true;
     }
+
+    function get_user_list(WP_REST_Request $request) {
+   
+   $username=$request->get_param( 'username' );
+   $results = get_users(array(
+    'login'     => $username
+
+));
+
+   //$results = get_users();
+
+   //Using the default controller to ensure the response follows the same structure as the default route
+   $users = array();
+   $controller = new WP_REST_Users_Controller();
+   foreach ( $results as $user ) {
+        $data    = $controller->prepare_item_for_response( $user, $request );
+        $users[] = $controller->prepare_response_for_collection( $data );
+    }
+
+   return rest_ensure_response( $users );
+    //return $results;
+}
    
     public function forum() {
       $namespace = $this->my_namespace . $this->my_version;
@@ -745,6 +799,34 @@ return \Stripe\Charge::create([
     
   }
 
+  public function find_certificate_course( WP_REST_Request $request ){
+
+    global $wpdb;
+
+    
+    $user=$request->get_param( 'username' );
+    $course=$request->get_param( 'id_course' );
+
+    $query = "SELECT * FROM user_certificate WHERE user='$user' AND id_course='$course'";
+    $list = $wpdb->get_results($query);
+    return $list;
+    
+  }
+
+   public function find_certificate_physical_course( WP_REST_Request $request ){
+
+    global $wpdb;
+
+    
+    $user=$request->get_param( 'username' );
+    $course=$request->get_param( 'id_course' );
+
+    $query = "SELECT * FROM user_certificate_physical WHERE user='$user' AND id_course='$course'";
+    $list = $wpdb->get_results($query);
+    return $list;
+    
+  }
+
   public function find_certificate( WP_REST_Request $request ){
 
     global $wpdb;
@@ -755,20 +837,19 @@ return \Stripe\Charge::create([
     $query = "SELECT * FROM user_certificate WHERE user='$user'";
     $list = $wpdb->get_results($query);
     return $list;
+    
+  }
 
- 
-   //return QRcode::png("http://192.168.99.100:8000/wp-content/uploads/2020/05/243886323.pdf", "test4.png"); 
+  public function find_certificate_physical( WP_REST_Request $request ){
 
+    global $wpdb;
 
+    
+    $user=$request->get_param( 'username' );
 
-
-    // $dir = wp_get_upload_dir()[path];
-    // $filename=$dir."/".$randomNumber.".pdf";
-    // $url = wp_get_upload_dir()[url]."/".$randomNumber.".pdf";
-
-    // QRcode::png("http://192.168.99.100:8000/wp-content/uploads/2020/05/243886323.pdf", $dir."/test4.png"); 
-
-    //   return wp_get_upload_dir()[url]."/test4.png";
+    $query = "SELECT * FROM user_certificate_physical WHERE user='$user'";
+    $list = $wpdb->get_results($query);
+    return $list;
     
   }
 
@@ -838,6 +919,73 @@ return \Stripe\Charge::create([
     }
     
   }
+
+  public function get_certificate_physical( WP_REST_Request $request ){
+
+    global $wpdb;
+
+    // $params = array('where' => "post_parent = '265'");
+
+     // // Example #1
+     //  $mycurso = pods_data ( 'curso', '265' );
+
+     //  $mymodulo = pods( 'modulo', '203' );
+
+     //  $myleccion = pods( 'leccion', '273' );
+
+    $userRequest=$request->get_param( 'username' );
+    $id_course=$request->get_param( 'id_course' );
+
+
+    //Obtengo el total de evaluaciones que tiene el curso
+     
+
+    $totalEvaluation = $this->searchTotalEvaluation($id_course);
+
+    //valido que el usuario aprobara min el 80% de las evaluaciones del curso
+
+    $query = "SELECT COUNT(*) as cantidadAprobado  FROM user_evaluation where user='$userRequest' and id_course='$id_course' and aprobado=true";
+    $list = $wpdb->get_results($query);
+
+    $cantidad=$list[0]->cantidadAprobado;
+
+
+    $Porcentaje= ($cantidad*100)/$totalEvaluation;
+
+    if($Porcentaje>=80){
+
+      $podCurso = pods( 'curso', $id_course );
+
+      $nombreCurso = $podCurso->field( 'nombre' );
+
+
+      $user = pods( 'user', '1' );
+
+      $nombreUser = $user->field( 'nombre' );
+
+      $apellidoUser = $user->field( 'apellido' );
+
+      $nombre=$nombreUser." ".$apellidoUser;
+
+      $randomNumber = rand();
+      
+      $response= $this->generateCertificate($nombreCurso,$nombre,$randomNumber);
+
+      $query = "INSERT INTO user_certificate_physical (user, id_course, id_certificate, url) VALUES ('$userRequest', '$id_course','$randomNumber','$response')";
+      $list = $wpdb->get_results($query);
+
+
+      return $response;
+
+    }
+
+    else
+    {
+      return "El porcentaje es ".$Porcentaje."% "."Se necesita minimo 80% para generar un certificado.";
+    }
+    
+  }
+
 
 
   public function get_user_info(WP_REST_Request $request ){
@@ -1008,6 +1156,20 @@ return \Stripe\Charge::create([
       return $url;
 
   }
+
+    public function total_Approve(WP_REST_Request $request){
+    global $wpdb;
+
+    $userRequest=$request->get_param( 'username' );
+    $id_course=$request->get_param( 'id_course' );
+
+    $query = "SELECT COUNT(*) as cantidadAprobado  FROM user_evaluation where user='$userRequest' and id_course='$id_course' and aprobado=true";
+    $list = $wpdb->get_results($query);
+
+    return $list;
+  }
+
+
 
 
       public function get_valoration( WP_REST_Request $request ){
