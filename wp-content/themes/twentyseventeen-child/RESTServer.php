@@ -120,8 +120,7 @@ class RESTServer extends WP_REST_Controller {
           register_rest_route( $namespace, '/user/getMoreViewed', array(
         array(
             'methods'         => WP_REST_Server::CREATABLE,
-            'callback'        => array( $this, 'get_most_viewed' ),
-            'permission_callback'   => array( $this, 'add_permission' )
+            'callback'        => array( $this, 'get_most_viewed' )
           )
       )  );
 
@@ -218,6 +217,12 @@ class RESTServer extends WP_REST_Controller {
           'callback'        => array( $this, 'register_payment_stripe' ),
           'permission_callback'   => array( $this, 'get_permission' )
         ) );
+
+          register_rest_route( $namespace, '/' . $base.'/registerPaymentPhysical', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'register_payment_stripe_physical' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
   }
 
    public function paypal() {
@@ -227,6 +232,11 @@ class RESTServer extends WP_REST_Controller {
           register_rest_route( $namespace, '/' . $base.'/registerPayment', array(
           'methods'         => WP_REST_Server::CREATABLE,
           'callback'        => array( $this, 'register_payment_paypal' ),
+          'permission_callback'   => array( $this, 'get_permission' )
+        ) );
+          register_rest_route( $namespace, '/' . $base.'/registerPaymentPhysical', array(
+          'methods'         => WP_REST_Server::CREATABLE,
+          'callback'        => array( $this, 'register_payment_paypal_physical' ),
           'permission_callback'   => array( $this, 'get_permission' )
         ) );
   }
@@ -249,13 +259,11 @@ class RESTServer extends WP_REST_Controller {
 
           register_rest_route( $namespace, '/' . $base.'/getValoration', array(
           'methods'         => WP_REST_Server::CREATABLE,
-          'callback'        => array( $this, 'get_valoration' ),
-          'permission_callback'   => array( $this, 'get_permission' )
+          'callback'        => array( $this, 'get_valoration' )
         ) );
           register_rest_route( $namespace, '/' . $base.'/getValorationAllCourses', array(
           'methods'         => WP_REST_Server::CREATABLE,
-          'callback'        => array( $this, 'get_valoration_allCourses' ),
-          'permission_callback'   => array( $this, 'get_permission' )
+          'callback'        => array( $this, 'get_valoration_allCourses' )
         ) );
   }
    
@@ -781,6 +789,24 @@ return \Stripe\Charge::create([
     
   }
 
+  public function register_payment_stripe_physical( WP_REST_Request $request ){
+
+
+     global $wpdb;
+
+    
+     $user=$request->get_param( 'username' );
+     $id_course=$request->get_param( 'id_course' );
+     $id_transaction=$request->get_param( 'id_transaction' );
+     $monto=$request->get_param( 'monto' );
+
+
+    $query = "INSERT INTO user_stripe_physical (user, id_course, id_transaction, monto) VALUES ('$user', '$id_course','$id_transaction','$monto')";
+    $list = $wpdb->get_results($query);
+    return $list;
+    
+  }
+
   public function register_payment_paypal( WP_REST_Request $request ){
 
 
@@ -794,6 +820,24 @@ return \Stripe\Charge::create([
 
 
     $query = "INSERT INTO user_paypal (user, id_course, id_transaction, monto) VALUES ('$user', '$id_course','$id_transaction','$monto')";
+    $list = $wpdb->get_results($query);
+    return $list;
+    
+  }
+
+   public function register_payment_paypal_physical( WP_REST_Request $request ){
+
+
+     global $wpdb;
+
+    
+     $user=$request->get_param( 'username' );
+     $id_course=$request->get_param( 'id_course' );
+     $id_transaction=$request->get_param( 'id_transaction' );
+     $monto=$request->get_param( 'monto' );
+
+
+    $query = "INSERT INTO user_paypal_physical (user, id_course, id_transaction, monto) VALUES ('$user', '$id_course','$id_transaction','$monto')";
     $list = $wpdb->get_results($query);
     return $list;
     
@@ -893,7 +937,7 @@ return \Stripe\Charge::create([
       $nombreCurso = $podCurso->field( 'nombre' );
 
 
-      $user = pods( 'user', '1' );
+      $user = pods( 'user', $userRequest );
 
       $nombreUser = $user->field( 'nombre' );
 
@@ -959,7 +1003,7 @@ return \Stripe\Charge::create([
       $nombreCurso = $podCurso->field( 'nombre' );
 
 
-      $user = pods( 'user', '1' );
+      $user = pods( 'user', $userRequest );
 
       $nombreUser = $user->field( 'nombre' );
 

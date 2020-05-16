@@ -45,6 +45,13 @@ create table user_paypal (id int UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
 
 
+create table user_stripe_physical (id int UNSIGNED AUTO_INCREMENT PRIMARY KEY, 
+	user VARCHAR(255) not null, id_course int not null, id_transaction VARCHAR(255) not null, monto int not null,reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);  
+
+create table user_paypal_physical (id int UNSIGNED AUTO_INCREMENT PRIMARY KEY, 
+	user VARCHAR(255) not null, id_course int not null, id_transaction VARCHAR(255) not null, monto int not null,reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);  
+
+
 create table user_certificate (id int UNSIGNED AUTO_INCREMENT PRIMARY KEY, 
 	user VARCHAR(255) not null, id_course int not null, id_certificate VARCHAR(255) not null, url VARCHAR(255) not null,reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);  
 
