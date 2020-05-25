@@ -1,7 +1,7 @@
 <?php
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    error_reporting(E_ALL);
     //Llamando librerias necesarias
     require_once ('../../../../../wp-config.php');
     require  "../vendor/autoload.php";
@@ -21,6 +21,9 @@ error_reporting(E_ALL);
             case 'todosLosUsuarios':
                 reporteTodosLosUsuarios();
                 break;
+            case 'cursosMasVistos':
+                cursosMasVistos();
+                break;
         }
     }
 
@@ -39,7 +42,38 @@ error_reporting(E_ALL);
     */
     function cursosMasVistos()
     {
-        
+        $documento = new Spreadsheet();
+        $wpdb = inicializarBaseDeDatos();
+        $cursosMasVistos = $wpdb->get_results("SELECT ui.id_curso as idCurso, p.post_title as titulo, count(ui.id_curso) as vistos from wp_posts as p, user_inscribed as ui where p.ID = ui.id_curso group by ui.id_curso order by vistos desc");
+        $hoja = $documento->getActiveSheet();
+        $hoja->setTitle("Usuarios en la plataforma");
+
+        $hoja->setCellValueByColumnAndRow(1, 1, "Id del curso");
+        $hoja->setCellValueByColumnAndRow(2, 1, "Nombre del curso");
+        $hoja->setCellValueByColumnAndRow(3, 1, "Cantidad de vistos");
+  
+
+        for ($i=0; $i < count($cursosMasVistos); $i++) {
+
+            $hoja->setCellValueByColumnAndRow(1,$i+2,  $cursosMasVistos[$i]->idCurso);
+            $hoja->setCellValueByColumnAndRow(2,$i+2,  $cursosMasVistos[$i]->titulo);
+            $hoja->setCellValueByColumnAndRow(3,$i+2,  $cursosMasVistos[$i]->vistos);
+
+
+        }
+
+        $writer = new Xlsx($documento);
+
+        $rutaDeGuardado = "../reportes/cursos_mas_vistos-".date("Y-m-d H:i:s").".xls";
+        # Le pasamos la ruta de guardado
+        $writer->save($rutaDeGuardado);
+
+        $url = construirUrl($rutaDeGuardado);
+
+        echo json_encode([
+            "rutaReporte" => $url
+        ]);
+
     }
 
     /**
@@ -83,7 +117,7 @@ error_reporting(E_ALL);
 
         $writer = new Xlsx($documento);
 
-        $rutaDeGuardado = "../reportes/test2.xls";
+        $rutaDeGuardado = "../reportes/usuarios-".date("Y-m-d H:i:s").".xls";
         # Le pasamos la ruta de guardado
         $writer->save($rutaDeGuardado);
 

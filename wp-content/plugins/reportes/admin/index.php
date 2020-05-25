@@ -25,11 +25,17 @@
                  </button>
 
         </section>
-
+        <hr/>
         <section class="col-12">
 
-            <h1>Reportes por estudiantes</h1>
-            <input #todosLosUsuarios id="todosLosUsuarios" type="submit" class="button" name="insert" value="todosLosUsuarios" />
+            <h3>Reportes por estudiantes</h3>
+
+            <h4>Lista de estudiantes</h4>
+            <p>Este reporte le brindará la lista de los estudiantes inscritos</p>
+
+            <button #todosLosUsuarios id="todosLosUsuarios" type="submit" class="button" name="insert" value="todosLosUsuarios"> 
+            Descargar
+            </button>
 
         </section>
     </div>
