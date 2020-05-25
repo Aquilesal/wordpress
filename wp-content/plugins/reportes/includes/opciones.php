@@ -18,6 +18,7 @@ function ln_reg_css_and_js($hook)
     } else {
 
         wp_enqueue_style('boot_css', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css' );
+		wp_enqueue_style('personalizado_css', plugins_url('../admin/css/styles.css', __FILE__) );
 		wp_enqueue_script('jquery_js', 'https://code.jquery.com/jquery-3.5.1.slim.min.js');
 		wp_enqueue_script('popper_js', 'https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js');
 		wp_enqueue_script('bootstrap_js' , 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js');

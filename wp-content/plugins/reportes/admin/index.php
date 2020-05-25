@@ -13,19 +13,23 @@
 
             <h3>Reportes por curso</h3>
 
-            <h4>Reportes por cursos más vistos</h4>
+
             <h4>Reportes por cursos más comprados</h4>
             <h4>Reportes por cursos más certificados</h4>
+            <h4>Reportes por cursos más vistos</h4>
 
             <p>Este reporte le brindará cuales han sido los cursos más vistos</p>
-            <button type="button" class="btn btn-primary">Descargar</button>
-            <input #cursosMasVistos id="cursosMasVistos" type="submit" class="button" name="insert" value="todosLosUsuarios" />
-            <input type="submit" class="button" name="select" value="select" />
+
+                 <button  #cursosMasVistos id="cursosMasVistos" type="submit" name="Cursos Mas Vistos" class="button" name="insert" value="cursosMasVistos" class="button" type="submit">
+                     Descargar
+                 </button>
+
         </section>
 
         <section class="col-12">
 
             <h1>Reportes por estudiantes</h1>
+            <input #todosLosUsuarios id="todosLosUsuarios" type="submit" class="button" name="insert" value="todosLosUsuarios" />
 
         </section>
     </div>

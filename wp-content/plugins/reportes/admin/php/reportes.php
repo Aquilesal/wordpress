@@ -34,6 +34,17 @@ error_reporting(E_ALL);
         exit;
     }
 
+    /**
+    * Funcion que permite la devolucion de los cursos mas vistos
+    */
+    function cursosMasVistos()
+    {
+        
+    }
+
+    /**
+    * Funcion que permite la devolucion del reporte de todos los usuarios
+    */
     function reporteTodosLosUsuarios()
     {
 
@@ -72,11 +83,25 @@ error_reporting(E_ALL);
 
         $writer = new Xlsx($documento);
 
-
+        $rutaDeGuardado = "../reportes/test2.xls";
         # Le pasamos la ruta de guardado
-        $writer->save(__DIR__."/reportes/test.xls");
+        $writer->save($rutaDeGuardado);
+
+        $url = construirUrl($rutaDeGuardado);
+
+        echo json_encode([
+            "rutaReporte" => $url
+        ]);
+
     }
 
+    function construirUrl( $rutaDeGuardado )
+    {
+
+        $rutaDeGuardado = substr($rutaDeGuardado ,2 );
+        return "/wp-content/plugins/reportes/admin".$rutaDeGuardado;
+
+    }
 
     function inicializarBaseDeDatos()
     {
