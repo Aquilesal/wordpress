@@ -1,6 +1,6 @@
 $(document).ready(function(){
 
-    $('#todosLosUsuarios').click(function(){
+    $('button').click(function(){
 
         var clickBtnValue = $(this).val();
         console.log(clickBtnValue);
@@ -14,18 +14,6 @@ $(document).ready(function(){
 
     });
 
-    $('#cursosMasVistos').click(function(){
-
-        var clickBtnValue = $(this).val();
-        console.log(clickBtnValue);
-        var ajaxurl = '/wp-content/plugins/reportes/admin/php/reportes.php',
-        data =  {'action': clickBtnValue};
-        $.post(ajaxurl, data, function (response) {
-            descargarArchivo(response);
-
-        });
-
-    });
 });
 
 function descargarArchivo(response){

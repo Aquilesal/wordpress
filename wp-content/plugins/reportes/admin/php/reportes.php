@@ -24,6 +24,12 @@
             case 'cursosMasVistos':
                 cursosMasVistos();
                 break;
+            case 'cursosCertificadosGeneradosDigitales':
+                cursosCertificadosGeneradosDigitales();
+                break;
+            case 'cursosMasComprados':
+                cursosMasComprados();
+                break;
         }
     }
 
@@ -35,6 +41,95 @@
     function insert() {
         echo "The insert function is called.";
         exit;
+    }
+
+    function cursosMasComprados()
+    {
+     
+        $documento = new Spreadsheet();
+        $wpdb = inicializarBaseDeDatos();
+        $cursosMasVistos = $wpdb->get_results("select compras.idCurso, compras.Curso, SUM(compras.montoTotal) montoTotal, SUM(compras.total)  total
+        from ( SELECT us.id_course idCurso, wp.post_title Curso, sum(us.monto) montoTotal, count(*) total            
+        FROM user_stripe us, wp_posts wp          
+            where wp.post_type LIKE 'Curso' && wp.ID = us.id_course          
+            group by us.id_course           
+        UNION All            
+        SELECT us.id_course idCurso, wp.post_title Curso, sum(us.monto) montoTotal, count(*) total             
+            FROM user_paypal us, wp_posts wp            
+            where wp.post_type LIKE 'Curso' && wp.ID = us.id_course            
+            group by us.id_course ) compras 
+        group by compras.idCurso, compras.Curso
+        order by total desc");
+        $hoja = $documento->getActiveSheet();
+        $hoja->setTitle("Usuarios en la plataforma");
+
+        $hoja->setCellValueByColumnAndRow(1, 1, "Id del curso");
+        $hoja->setCellValueByColumnAndRow(2, 1, "Nombre del curso");
+        $hoja->setCellValueByColumnAndRow(3, 1, "Monto Total");
+        $hoja->setCellValueByColumnAndRow(4, 1, "Cantidad de veces comprado");
+  
+
+        for ($i=0; $i < count($cursosMasVistos); $i++) {
+
+            $hoja->setCellValueByColumnAndRow(1,$i+2,  $cursosMasVistos[$i]->idCurso);
+            $hoja->setCellValueByColumnAndRow(2,$i+2,  $cursosMasVistos[$i]->Curso);
+            $hoja->setCellValueByColumnAndRow(3,$i+2,  $cursosMasVistos[$i]->montoTotal);
+            $hoja->setCellValueByColumnAndRow(4,$i+2,  $cursosMasVistos[$i]->total);
+
+
+        }
+
+        $writer = new Xlsx($documento);
+
+        $rutaDeGuardado = "../reportes/cursos_mas_comprados-".date("Y-m-d H:i:s").".xls";
+        # Le pasamos la ruta de guardado
+        $writer->save($rutaDeGuardado);
+
+        $url = construirUrl($rutaDeGuardado);
+
+        echo json_encode([
+            "rutaReporte" => $url
+        ]);
+
+
+    }
+    /**
+    * Funcion que permite la devolucion de los cursos con certificados fisicos generados
+    */
+    function cursosCertificadosGeneradosDigitales()
+    {
+        $documento = new Spreadsheet();
+        $wpdb = inicializarBaseDeDatos();
+        $cursosMasVistos = $wpdb->get_results("select uc.id_course as idCurso, wp.post_title as titulo, count(*) as certificadosGenerados from wp_posts wp, user_certificate uc where wp.post_type LIKE 'Curso' && wp.ID = uc.id_course group by idCurso order by certificadosGenerados desc");
+        $hoja = $documento->getActiveSheet();
+        $hoja->setTitle("Usuarios en la plataforma");
+
+        $hoja->setCellValueByColumnAndRow(1, 1, "Id del curso");
+        $hoja->setCellValueByColumnAndRow(2, 1, "Nombre del curso");
+        $hoja->setCellValueByColumnAndRow(3, 1, "Cantidad de certificados generados");
+  
+
+        for ($i=0; $i < count($cursosMasVistos); $i++) {
+
+            $hoja->setCellValueByColumnAndRow(1,$i+2,  $cursosMasVistos[$i]->idCurso);
+            $hoja->setCellValueByColumnAndRow(2,$i+2,  $cursosMasVistos[$i]->titulo);
+            $hoja->setCellValueByColumnAndRow(3,$i+2,  $cursosMasVistos[$i]->certificadosGenerados);
+
+
+        }
+
+        $writer = new Xlsx($documento);
+
+        $rutaDeGuardado = "../reportes/cursos_certificados_generados_digitales-".date("Y-m-d H:i:s").".xls";
+        # Le pasamos la ruta de guardado
+        $writer->save($rutaDeGuardado);
+
+        $url = construirUrl($rutaDeGuardado);
+
+        echo json_encode([
+            "rutaReporte" => $url
+        ]);
+
     }
 
     /**
