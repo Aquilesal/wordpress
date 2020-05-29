@@ -30,6 +30,9 @@
             case 'cursosMasComprados':
                 cursosMasComprados();
                 break;
+            case 'usuariosPorCurso':
+                usuariosPorCurso();
+                break;
         }
     }
 
@@ -41,6 +44,67 @@
     function insert() {
         echo "The insert function is called.";
         exit;
+    }
+
+    function usuariosPorCurso()
+    {
+        $documento = new Spreadsheet();
+        $wpdb = inicializarBaseDeDatos();
+        $consulta = $wpdb->get_results(" SELECT wu.user_nicename Usuario, wu.display_name Nombre ,wu.user_email Correo, wp.ID IdCurso, wp.post_title Curso FROM user_inscribed ui, wp_users wu, wp_posts wp WHERE wp.post_type LIKE 'Curso' && wp.ID = ui.id_curso && ui.usuario = wu.user_nicename ORDER BY IdCurso;");
+        $hoja = $documento->getSheet(0);
+        $hoja->setCellValueByColumnAndRow(1, 1, "Nombre del curso:");
+        $hoja->setCellValueByColumnAndRow(2, 2, "Usuario");
+        $hoja->setCellValueByColumnAndRow(3, 2, "Nombre");
+        $hoja->setCellValueByColumnAndRow(4, 2, "Correo");
+
+        $fila = 3;
+
+        for ($i=0; $i < count($consulta); $i++) {
+
+            //Este if es para crear las hojas por curso
+            if( $curso !=  $consulta[$i]->IdCurso){
+                
+                if( !isset($contadorSheet) ){
+                    
+                    $contadorSheet = 0;
+
+                }else{
+
+                    $contadorSheet++;
+                    $documento->createSheet();
+                    $hoja = $documento->getSheet($contadorSheet);
+                    $hoja->setCellValueByColumnAndRow(1, 1, "Nombre del curso:");
+                    $hoja->setCellValueByColumnAndRow(2, 2, "Usuario");
+                    $hoja->setCellValueByColumnAndRow(3, 2, "Nombre");
+                    $hoja->setCellValueByColumnAndRow(4, 2, "Correo");
+                    $fila = 3;
+                }
+
+                $hoja = $documento->getSheet($contadorSheet);
+                $hoja->setTitle( $consulta[$i]->IdCurso );
+
+            }
+
+            $curso = $consulta[$i]->IdCurso;
+            $hoja->setCellValueByColumnAndRow(2, 1, $consulta[$i]->Curso." de ID: ".$consulta[$i]->IdCurso);
+            $hoja->setCellValueByColumnAndRow(2,$fila,  $consulta[$i]->Usuario);
+            $hoja->setCellValueByColumnAndRow(3,$fila,  $consulta[$i]->Nombre);
+            $hoja->setCellValueByColumnAndRow(4,$fila,  $consulta[$i]->Correo);
+            $fila = $fila + 1;
+
+        }
+
+        $writer = new Xlsx($documento);
+
+        $rutaDeGuardado = "../reportes/estudiantes_por_curso-".date("Y-m-d H:i:s").".xls";
+        # Le pasamos la ruta de guardado
+        $writer->save($rutaDeGuardado);
+
+        $url = construirUrl($rutaDeGuardado);
+
+        echo json_encode([
+            "rutaReporte" => $url
+        ]);
     }
 
     function cursosMasComprados()
@@ -60,6 +124,7 @@
             group by us.id_course ) compras 
         group by compras.idCurso, compras.Curso
         order by total desc");
+        
         $hoja = $documento->getActiveSheet();
         $hoja->setTitle("Usuarios en la plataforma");
 

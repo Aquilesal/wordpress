@@ -51,6 +51,13 @@
             Descargar
             </button>
 
+            <h4>Lista de estudiantes inscritos por curso</h4>
+            <p>Este reporte le brindará la lista de los estudiantes inscritos</p>
+
+            <button #usuariosPorCurso id="usuariosPorCurso" type="submit" class="button" name="insert" value="usuariosPorCurso"> 
+                Descargar
+            </button>
+
         </section>
     </div>
     <!-- JS, Popper.js, and jQuery -->
