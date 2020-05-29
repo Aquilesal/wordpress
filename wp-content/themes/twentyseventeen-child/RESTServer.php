@@ -1116,11 +1116,11 @@ return \Stripe\Charge::create([
 
       $pdf->AddPage(); 
        //$pdf->Image('fpdf181/ucab_logo.jpg'); 
-      $pdf->Image('http://192.168.99.100:8000/wp-content/uploads/2020/04/ucab_logo.jpg',325,0,200,0,'JPG');
+      $pdf->Image('http://aquilesypedrotesis.host/wp-content/uploads/2020/05/ucab_logo.jpg',325,0,200,0,'JPG');
       $pdf->Image($urlQr,700,50,100,0,'PNG');
-      $pdf->Image("http://192.168.99.100:8000/wp-content/uploads/2020/05/franja_amarilla.png",0,0,850,0,'PNG');
-      $pdf->Image("http://192.168.99.100:8000/wp-content/uploads/2020/05/franja_azul.png",828,0,15,0,'PNG');
-      $pdf->Image("http://192.168.99.100:8000/wp-content/uploads/2020/05/franja_verde.png",0,580,850,15,'PNG');
+      $pdf->Image("http://aquilesypedrotesis.host/wp-content/uploads/2020/05/franja_amarilla.png",0,0,850,0,'PNG');
+      $pdf->Image("http://aquilesypedrotesis.host/wp-content/uploads/2020/05/franja_azul.png",828,0,15,0,'PNG');
+      $pdf->Image("http://aquilesypedrotesis.host/wp-content/uploads/2020/05/franja_verde.png",0,580,850,15,'PNG');
      
     // // Print the certificate logo  
     // $pdf->Image("fpdf181/tt1.png", 140, 180, 240);   
