@@ -21,7 +21,7 @@
             <button  #cursosCertificadosGeneradosDigitales id="cursosCertificadosGeneradosDigitales" type="submit" name="Cursos Mas Vistos" class="button" name="insert" value="cursosMasComprados" class="button" type="submit">
                 Descargar
             </button>
-            
+            <hr/>
             <h4>Reportes por cursos más certificados digitales</h4>
 
             <p>Este reporte le brindará cuales han sido los cursos que más certificados digitales han sido generados</p>
@@ -29,7 +29,7 @@
             <button  #cursosCertificadosGeneradosDigitales id="cursosCertificadosGeneradosDigitales" type="submit" name="Cursos Mas Vistos" class="button" name="insert" value="cursosCertificadosGeneradosDigitales" class="button" type="submit">
                 Descargar
             </button>
-            
+            <hr/>
             <h4>Reportes por cursos más vistos</h4>
             
             <p>Este reporte le brindará cuales han sido los cursos más vistos</p>
@@ -37,7 +37,7 @@
                  <button  #cursosMasVistos id="cursosMasVistos" type="submit" name="Cursos Mas Vistos" class="button" name="insert" value="cursosMasVistos" class="button" type="submit">
                      Descargar
                  </button>
-
+                 <hr/>
         </section>
         <hr/>
         <section class="col-12">
@@ -50,7 +50,7 @@
             <button #todosLosUsuarios id="todosLosUsuarios" type="submit" class="button" name="insert" value="todosLosUsuarios"> 
             Descargar
             </button>
-
+            <hr/>
             <h4>Lista de estudiantes inscritos por curso</h4>
             <p>Este reporte le brindará la lista de los estudiantes inscritos</p>
 

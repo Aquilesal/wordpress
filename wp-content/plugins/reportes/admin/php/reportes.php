@@ -50,12 +50,20 @@
     {
         $documento = new Spreadsheet();
         $wpdb = inicializarBaseDeDatos();
-        $consulta = $wpdb->get_results(" SELECT wu.user_nicename Usuario, wu.display_name Nombre ,wu.user_email Correo, wp.ID IdCurso, wp.post_title Curso FROM user_inscribed ui, wp_users wu, wp_posts wp WHERE wp.post_type LIKE 'Curso' && wp.ID = ui.id_curso && ui.usuario = wu.user_nicename ORDER BY IdCurso;");
+        
+        $consulta = $wpdb->get_results("SELECT wu.user_nicename Usuario, wu.display_name Nombre ,wu.user_email Correo, wp.ID IdCurso, wp.post_title Curso , (SELECT meta_value from wp_usermeta wm WHERE wu.ID = wm.user_id && meta_key LIKE 'apellido') Apellido,  (SELECT meta_value from wp_usermeta wm WHERE wu.ID = wm.user_id && meta_key LIKE 'pais') Pais,  (SELECT meta_value from wp_usermeta wm WHERE wu.ID = wm.user_id && meta_key LIKE 'profesion') Profesion, (SELECT meta_value from wp_usermeta wm WHERE wu.ID = wm.user_id && meta_key LIKE 'compania_universidad') Compania_Universidad
+        FROM user_inscribed ui, wp_users wu, wp_posts wp 
+        WHERE wp.post_type LIKE 'Curso' && wp.ID = ui.id_curso && ui.usuario = wu.user_nicename ORDER BY IdCurso;");
+
         $hoja = $documento->getSheet(0);
         $hoja->setCellValueByColumnAndRow(1, 1, "Nombre del curso:");
         $hoja->setCellValueByColumnAndRow(2, 2, "Usuario");
         $hoja->setCellValueByColumnAndRow(3, 2, "Nombre");
-        $hoja->setCellValueByColumnAndRow(4, 2, "Correo");
+        $hoja->setCellValueByColumnAndRow(4, 2, "Apellido");
+        $hoja->setCellValueByColumnAndRow(5, 2, "Correo");
+        $hoja->setCellValueByColumnAndRow(6, 2, "País");
+        $hoja->setCellValueByColumnAndRow(7, 2, "Profesión");
+        $hoja->setCellValueByColumnAndRow(8, 2, "Compañía/Universidad");
 
         $fila = 3;
 
@@ -76,7 +84,11 @@
                     $hoja->setCellValueByColumnAndRow(1, 1, "Nombre del curso:");
                     $hoja->setCellValueByColumnAndRow(2, 2, "Usuario");
                     $hoja->setCellValueByColumnAndRow(3, 2, "Nombre");
-                    $hoja->setCellValueByColumnAndRow(4, 2, "Correo");
+                    $hoja->setCellValueByColumnAndRow(4, 2, "Apellido");
+                    $hoja->setCellValueByColumnAndRow(5, 2, "Correo");
+                    $hoja->setCellValueByColumnAndRow(6, 2, "País");
+                    $hoja->setCellValueByColumnAndRow(7, 2, "Profesión");
+                    $hoja->setCellValueByColumnAndRow(8, 2, "Compañía/Universidad");
                     $fila = 3;
                 }
 
@@ -89,7 +101,11 @@
             $hoja->setCellValueByColumnAndRow(2, 1, $consulta[$i]->Curso." de ID: ".$consulta[$i]->IdCurso);
             $hoja->setCellValueByColumnAndRow(2,$fila,  $consulta[$i]->Usuario);
             $hoja->setCellValueByColumnAndRow(3,$fila,  $consulta[$i]->Nombre);
-            $hoja->setCellValueByColumnAndRow(4,$fila,  $consulta[$i]->Correo);
+            $hoja->setCellValueByColumnAndRow(4,$fila,  $consulta[$i]->Apellido);
+            $hoja->setCellValueByColumnAndRow(5,$fila,  $consulta[$i]->Correo);
+            $hoja->setCellValueByColumnAndRow(6,$fila,  $consulta[$i]->Pais);
+            $hoja->setCellValueByColumnAndRow(7,$fila,  $consulta[$i]->Profesion);
+            $hoja->setCellValueByColumnAndRow(8,$fila,  $consulta[$i]->Compania_Universidad);
             $fila = $fila + 1;
 
         }
